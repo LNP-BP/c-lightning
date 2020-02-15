@@ -353,6 +353,18 @@ static unsigned channel_msg(struct subd *sd, const u8 *msg, const int *fds)
 	/* We send these. */
 	case WIRE_CUSTOMMSG_OUT:
 		break;
+
+#if RGB
+    /* RGB
+     *
+     * Handling requests from the channel daemons for a new
+     * client-validated state information
+     */
+	case WIRE_RGB_STATE_UPDATE:
+        handle_rgb_state_update(sd->ld, sd->node_id, msg);
+        break;
+#endif
+
 	}
 
 	return 0;
