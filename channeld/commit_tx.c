@@ -143,6 +143,9 @@ struct bitcoin_tx *commit_tx(const tal_t *ctx,
 	 * 2. Put the commitment into any of the outputs matching
 	 *    the present fee:
 	 *    - tweak the key from the specific output
+	 *    - re-generate scriptPubkey for the output
+	 *    - if it is an HTLC output, re-generate HTLC success
+	 *      or failure transaction
 	 *
 	 * We choose the second option since it has less tradeoffs
 	 * and is more deterministic
@@ -369,6 +372,13 @@ struct bitcoin_tx *commit_tx(const tal_t *ctx,
 	 * 1. Request from the RGB plugin
 	 *    - `cmt_blinding`: protocol-specific LNPBP-3 blinding factor
 	 *    - `cmt_value`: 256-bit value of the client-validated state commitment
+	 *
+	 *    Both can be done through exchanging messages with plugin by calling
+	 *    `wire_sync_write` followed by `wire_sync_read` to the main lightningd
+	 *    with WIRE_RGB_STATUSUPDATE message
+	 *
+	 *    ISSUE: we do not have a file descriptor for the lightningd here
+	 *
 	 * 2. Take the output with index `(cmt_blinding + fee) mod num_outputs`
 	 *   and tweak it's public key with `cmt_value`
 	 *

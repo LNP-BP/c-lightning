@@ -8,3 +8,8 @@ msgdata,custommsg_in,msg,u8,msg_len
 msgtype,custommsg_out,1031
 msgdata,custommsg_out,msg_len,u16,
 msgdata,custommsg_out,msg,u8,msg_len
+
+# RGB
+msgtype,rgb_stateupdate,1032
+msgdata,rgb_stateupdate,msg_len,u16
+msgdata,rgb_stateupdate,msg,u8,msg_len
