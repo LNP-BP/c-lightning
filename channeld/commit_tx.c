@@ -107,6 +107,46 @@ struct bitcoin_tx *commit_tx(const tal_t *ctx,
 		abort();
 	assert(!amount_msat_greater_sat(total_pay, funding));
 
+	/* RGB
+	 *
+	 * In this function we have to add an LNPBP1-4 commitment to
+	 * some client-validated state data (RGB data) into
+	 * the LN commitment transaction. For this reason we need to:
+	 * - tweak a single public key in one of the transaction
+	 *   outputs according to LNPBP-1
+	 * - make sure that `(fee + <RGB-specific data>) mod num_outputs`
+	 *   points to the output containing the tweaked key
+	 *
+	 * Issues that we have to keep in mind:
+	 * 1. Number of commitment transaction outputs may vary and be
+	 *    up to a thousands (because of multiple HTLCs), adjusting
+	 *    the fee may take up to thousands of satoshis
+	 * 2. `to_local` and `to_remote` outputs may be absent
+	 *    from the transaction (when all funds are allocated to
+	 *    HTLCs)
+	 * 3. Increasing the fee requires to take the funds from
+	 *    somewhere, which may exceed amount of funds available
+	 *    in both `to_local` and `to_remote` outputs
+	 *
+	 * Thee are two ways of doing that:
+	 * 1. Update the fee:
+	 *    - decide where to take the funds in a deterministic way
+	 *      and fail if there is no enough funds available
+	 *    - put the commitment into `to_local` and, if absent,
+	 *      `to_remote` output
+	 *    - tweak only a copy of the public key from
+	 *      `keyset` and do not modify it
+	 *    - fail if no `to_local` and `to_remote` outputs are
+	 *      present
+	 * 2. Put the commitment into any of the outputs matching
+	 *    the present fee:
+	 *    - tweak the key from the specific output
+	 *
+	 * We choose the second option since it has less tradeoffs
+	 * and is more deterministic
+	 *
+	 */
+
 	/* BOLT #3:
 	 *
 	 * 1. Calculate which committed HTLCs need to be trimmed (see
@@ -305,6 +345,24 @@ struct bitcoin_tx *commit_tx(const tal_t *ctx,
 	u32 sequence = (0x80000000 | ((obscured_commitment_number>>24) & 0xFFFFFF));
 	bitcoin_tx_add_input(tx, funding_txid, funding_txout, sequence, funding, NULL);
 
+	/* RGB
+	 *
+	 * Tweak public key with the commitment to the client-validated
+	 * state for an output pointed by the current fee.
+	 *
+	 * 1. Request from the RGB plugin
+	 *    - `cmt_blinding`: protocol-specific LNPBP-3 blinding factor
+	 *    - `cmt_value`: 256-bit value of the client-validated state commitment
+	 * 2. Take the output with index `(cmt_blinding + fee) mod num_outputs`
+	 *   and tweak it's public key with `cmt_value`
+	 *
+	 * For this reason we need to extend plugin functionality to allow
+	 * them to return data
+	 */
+
+
+
+	/* Elements-specific work happens here */
 	elements_tx_add_fee_output(tx);
 	tal_resize(&(tx->output_witscripts), tx->wtx->num_outputs);
 
