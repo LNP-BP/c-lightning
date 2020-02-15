@@ -293,6 +293,22 @@ struct bitcoin_tx **channel_txs(const tal_t *ctx,
 	/* Figure out what @side will already be committed to. */
 	gather_htlcs(ctx, channel, side, &committed, NULL, NULL);
 
+	/* RGB:
+	 *
+	 * To commit to a new version of client-validated data
+	 * we have to modify what is happening here.
+	 *
+	 * 1. The commitment transaction must have an output tweaked
+	 *    to contain commitment to a new state.
+	 * 2. If this output is an HTLC output, we need to modify
+	 *    the corresponding HTLC success/timeout transaction
+	 *    to use a tweaked signature to spend from the commitment
+	 *    transaction tweaked output
+	 * 3. Each HTLC tx must be also modified in order to contain
+	 *    a tweaked output committing to another client-validated
+	 *    state transfer
+	 */
+
 	txs = tal_arr(ctx, struct bitcoin_tx *, 1);
 	txs[0] = commit_tx(
 	    ctx, &channel->funding_txid, channel->funding_txout,
