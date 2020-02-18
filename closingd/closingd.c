@@ -62,6 +62,11 @@ static struct bitcoin_tx *close_tx(const tal_t *ctx,
 		     type_to_string(tmpctx, struct amount_sat, &out[REMOTE]),
 		     type_to_string(tmpctx, struct amount_sat, &fee));
 
+	/* RGB
+	 *
+	 * Tweak pubkey here
+	 */
+
 	/* FIXME: We need to allow this! */
 	tx = create_close_tx(ctx,
 			     chainparams,

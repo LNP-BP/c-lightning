@@ -307,6 +307,26 @@ struct bitcoin_tx **channel_txs(const tal_t *ctx,
 	 * 3. Each HTLC tx must be also modified in order to contain
 	 *    a tweaked output committing to another client-validated
 	 *    state transfer
+	 *
+	 * There are two main ways of achieving this goal:
+	 * 1. Modify the necessary transactions ad hoc (this will
+	 *    also include the required modifications to `openingd`,
+	 *    `closingd` and `onchaind`)
+	 * 2. Use `hsmd` as an universal extension point for transaction
+	 *    modification and tweaking. This will require modification
+	 *    of HSMd wire protocol, such that it will receive the whole
+	 *    transaction + extra information about the channel and
+	 *    transaction type (funding, commitment, HTLC success/failure,
+	 *    closing) and return a new version of the transaciton
+	 *
+	 * The advantages of the second approach are:
+	 * 1. This can be easier integrated into the main at some stage
+	 * 2. It provides generic extension mechanism that can be
+	 *    used in future by non-RGB protocols.
+	 * 3. It introduces less code into the functions in the daemons,
+	 *    making it easier to maintain the fork.
+	 * 4. It will make impossible to miss a modification point
+	 *    in one of the daemons.
 	 */
 
 	txs = tal_arr(ctx, struct bitcoin_tx *, 1);

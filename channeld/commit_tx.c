@@ -258,6 +258,8 @@ struct bitcoin_tx *commit_tx(const tal_t *ctx,
 		struct amount_sat amount = amount_msat_to_sat_round_down(self_pay);
 
 		bitcoin_tx_add_output(tx, p2wsh, amount);
+		// RGB: TODO: Identify `to_local` output with some pre-defined enum number
+		//            and clean that up before returning from this function
 		(*htlcmap)[n] = NULL;
 		/* We don't assign cltvs[n]: if we use it, order doesn't matter.
 		 * However, valgrind will warn us something wierd is happening */
@@ -291,6 +293,8 @@ struct bitcoin_tx *commit_tx(const tal_t *ctx,
 		 */
 		int pos = bitcoin_tx_add_output(tx, p2wpkh, amount);
 		assert(pos == n);
+        // RGB: TODO: Identify `ro_remote` output with some pre-defined enum number
+        //            and clean that up before returning from this function
 		(*htlcmap)[n] = NULL;
 		/* We don't assign cltvs[n]: if we use it, order doesn't matter.
 		 * However, valgrind will warn us something wierd is happening */

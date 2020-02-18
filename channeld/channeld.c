@@ -1038,6 +1038,12 @@ static secp256k1_ecdsa_signature *calc_commitsigs(const tal_t *ctx,
 						     *txs[i+1]->input_amounts[0],
 						     &peer->remote_per_commit);
 
+		/* RGB
+		 *
+		 * Re-tweak the public key for each of the HTLC tx inputs so
+		 * the signature will match the tweaked version of the
+		 * scriptPubkey
+		 */
 		msg = hsm_req(tmpctx, take(msg));
 		if (!fromwire_hsm_sign_tx_reply(msg, &sig))
 			status_failed(STATUS_FAIL_HSM_IO,
